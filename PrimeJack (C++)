@@ -1,0 +1,121 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <cstdlib>
+
+// Función para verificar si un número es primo
+bool esPrimo(int num) {
+    if (num <= 1) return false;
+    if (num == 2) return true;
+    if (num % 2 == 0) return false;
+    for (int i = 3; i * i <= num; i += 2) {
+        if (num % i == 0) return false;
+    }
+    return true;
+}
+
+// Función para lanzar un dado de 6 caras
+int lanzarDado() {
+    return rand() % 6 + 1;
+}
+
+// Función para lanzar dos dados
+std::vector<int> lanzarDados() {
+    return {lanzarDado(), lanzarDado()};
+}
+
+// Función para sumar los valores de los dados
+int sumarDados(const std::vector<int>& dados) {
+    return dados[0] + dados[1];
+}
+
+// Función para determinar el mejor puntaje en base a la prioridad de números primos
+int mejorPuntaje(const std::vector<int>& puntuaciones) {
+    int mejor = 0;
+    for (int puntuacion : puntuaciones) {
+        if (esPrimo(puntuacion)) {
+            if (puntuacion > mejor) {
+                mejor = puntuacion;
+            }
+        } else if (puntuacion > mejor && puntuacion <= 23) {
+            mejor = puntuacion;
+        }
+    }
+    return mejor;
+}
+
+int main() {
+    srand(static_cast<unsigned int>(time(0))); // Semilla para la generación aleatoria
+
+    std::cout << "Bienvenido a Prime Jack (o 23)!" << std::endl;
+
+    // Jugador
+    int puntuacionJugador = 0;
+    std::vector<int> puntuacionesJugador;
+
+    // Computadora
+    int puntuacionComputadora = 0;
+    std::vector<int> puntuacionesComputadora;
+
+    // Turno del jugador
+    while (puntuacionJugador < 23) {
+        std::cout << "\nLanzar dados (y/n)? ";
+        char respuesta;
+        std::cin >> respuesta;
+        if (respuesta == 'n' || respuesta == 'N') break;
+
+        std::vector<int> dados = lanzarDados();
+        int suma = sumarDados(dados);
+        std::cout << "Has lanzado: " << dados[0] << " y " << dados[1] << " (suma: " << suma << ")\n";
+
+        if (dados[0] == dados[1]) { // Doble
+            std::cout << "¡Has sacado un doble! Puedes lanzar 3 dados.\n";
+            int sumaExtra = lanzarDado() + lanzarDado() + lanzarDado();
+            std::cout << "Has lanzado tres dados adicionales: " << sumaExtra << "\n";
+            suma += sumaExtra;
+        }
+
+        if (suma == 12) {
+            std::cout << "Has sacado un 12. Puedes lanzar solo 1 dado para alcanzar hasta 18.\n";
+            suma += lanzarDado();
+            std::cout << "Lanzado adicional: " << suma - (suma - lanzarDado()) << "\n";
+        }
+
+        puntuacionJugador += suma;
+        puntuacionesJugador.push_back(puntuacionJugador);
+        std::cout << "Puntuación total del jugador: " << puntuacionJugador << "\n";
+    }
+
+    // Turno de la computadora
+    std::cout << "\nTurno de la computadora...\n";
+    while (puntuacionComputadora < 18) {
+        std::vector<int> dados = lanzarDados();
+        int suma = sumarDados(dados);
+        if (dados[0] == dados[1]) { // Doble
+            suma += lanzarDado() + lanzarDado() + lanzarDado();
+        }
+        puntuacionComputadora += suma;
+        puntuacionesComputadora.push_back(puntuacionComputadora);
+    }
+    std::cout << "Puntuación total de la computadora: " << puntuacionComputadora << "\n";
+
+    // Determinar el ganador
+    int mejorJugador = mejorPuntaje(puntuacionesJugador);
+    int mejorComputadora = mejorPuntaje(puntuacionesComputadora);
+
+    std::cout << "\nPuntuación final del jugador (mejor): " << mejorJugador << "\n";
+    std::cout << "Puntuación final de la computadora (mejor): " << mejorComputadora << "\n";
+
+    if (mejorJugador > 23) mejorJugador = 0;
+    if (mejorComputadora > 23) mejorComputadora = 0;
+
+    if (mejorJugador > mejorComputadora) {
+        std::cout << "¡El jugador gana!\n";
+    } else if (mejorComputadora > mejorJugador) {
+        std::cout << "¡La computadora gana!\n";
+    } else {
+        std::cout << "¡Empate!\n";
+    }
+
+    return 0;
+}
