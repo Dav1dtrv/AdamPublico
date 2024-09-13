@@ -1,0 +1,109 @@
+import random
+
+# Función para verificar si un número es primo
+def es_primo(num):
+    if num <= 1:
+        return False
+    if num == 2:
+        return True
+    if num % 2 == 0:
+        return False
+    for i in range(3, int(num**0.5) + 1, 2):
+        if num % i == 0:
+            return False
+    return True
+
+# Función para lanzar un dado de 6 caras
+def lanzar_dado():
+    return random.randint(1, 6)
+
+# Función para lanzar dos dados
+def lanzar_dados():
+    return [lanzar_dado(), lanzar_dado()]
+
+# Función para sumar los valores de los dados
+def sumar_dados(dados):
+    return sum(dados)
+
+# Función para determinar el mejor puntaje en base a la prioridad de números primos
+def mejor_puntaje(puntuaciones):
+    mejor = 0
+    for puntuacion in puntuaciones:
+        if es_primo(puntuacion):
+            if puntuacion > mejor:
+                mejor = puntuacion
+        elif puntuacion > mejor and puntuacion <= 23:
+            mejor = puntuacion
+    return mejor
+
+def main():
+    random.seed()  # Inicializa la semilla para la generación aleatoria
+
+    print("¡Bienvenido a Prime Jack (o 23)!")
+
+    # Jugador
+    puntuacion_jugador = 0
+    puntuaciones_jugador = []
+
+    # Computadora
+    puntuacion_computadora = 0
+    puntuaciones_computadora = []
+
+    # Turno del jugador
+    while puntuacion_jugador < 23:
+        respuesta = input("\nLanzar dados (s/n)? ").strip().lower()
+        if respuesta == 'n':
+            break
+
+        dados = lanzar_dados()
+        suma = sumar_dados(dados)
+        print(f"Has lanzado: {dados[0]} y {dados[1]} (suma: {suma})")
+
+        if dados[0] == dados[1]:  # Doble
+            print("¡Has sacado un doble! Puedes lanzar 3 dados.")
+            suma_extra = lanzar_dado() + lanzar_dado() + lanzar_dado()
+            print(f"Has lanzado tres dados adicionales: {suma_extra}")
+            suma += suma_extra
+
+        if suma == 12:
+            print("Has sacado un 12. Puedes lanzar solo 1 dado para alcanzar hasta 18.")
+            dado_adicional = lanzar_dado()
+            suma += dado_adicional
+            print(f"Lanzado adicional: {dado_adicional}")
+
+        puntuacion_jugador += suma
+        puntuaciones_jugador.append(puntuacion_jugador)
+        print(f"Puntuación total del jugador: {puntuacion_jugador}")
+
+    # Turno de la computadora
+    print("\nTurno de la computadora...")
+    while puntuacion_computadora < 18:
+        dados = lanzar_dados()
+        suma = sumar_dados(dados)
+        if dados[0] == dados[1]:  # Doble
+            suma += lanzar_dado() + lanzar_dado() + lanzar_dado()
+        puntuacion_computadora += suma
+        puntuaciones_computadora.append(puntuacion_computadora)
+    print(f"Puntuación total de la computadora: {puntuacion_computadora}")
+
+    # Determinar el ganador
+    mejor_jugador = mejor_puntaje(puntuaciones_jugador)
+    mejor_computadora = mejor_puntaje(puntuaciones_computadora)
+
+    print(f"\nPuntuación final del jugador (mejor): {mejor_jugador}")
+    print(f"Puntuación final de la computadora (mejor): {mejor_computadora}")
+
+    if mejor_jugador > 23:
+        mejor_jugador = 0
+    if mejor_computadora > 23:
+        mejor_computadora = 0
+
+    if mejor_jugador > mejor_computadora:
+        print("¡El jugador gana!")
+    elif mejor_computadora > mejor_jugador:
+        print("¡La computadora gana!")
+    else:
+        print("¡Empate!")
+
+if __name__ == "__main__":
+    main()
