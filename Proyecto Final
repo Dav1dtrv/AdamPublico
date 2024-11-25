@@ -167,20 +167,30 @@ def computer_turn(player_board, difficulty, previous_hits=[]):
                     previous_hits.append((x, y))
                 return True
 
-    elif difficulty == "medium":
-        # Lógica para dificultad "medium"
+    elif difficulty == "medium" and previous_hits:
+        last_hit = previous_hits[-1]
+        neighbors = [
+            (last_hit[0] + dx, last_hit[1] + dy)
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            if 0 <= last_hit[0] + dx < GRID_SIZE and 0 <= last_hit[1] + dy < GRID_SIZE
+        ]
+        random.shuffle(neighbors)
+        for nx, ny in neighbors:
+            if player_board[ny][nx] in [0, 1]:
+                if handle_attack(player_board, nx, ny):
+                    previous_hits.append((nx, ny))
+                else:
+                    previous_hits.pop()
+                return
+    else:
         while True:
             x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
             if player_board[y][x] in [0, 1]:
-                handle_attack(player_board, x, y)
-                return True
+                if handle_attack(player_board, x, y):
+                    if difficulty == "medium":
+                        previous_hits.append((x, y))
+                return
 
-    else:  # Dificultad fácil
-        while True:
-            x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
-            if player_board[y][x] in [0, 1]:
-                handle_attack(player_board, x, y)
-                return True
 
 # Función principal del juego
 def main():
