@@ -1,0 +1,229 @@
+import pygame
+import random
+
+# Inicializar Pygame
+pygame.init()
+
+# Definir colores
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+GRAY = (169, 169, 169)
+BLACK = (0, 0, 0)
+YELLOW = (255, 255, 0)
+
+# Parámetros de la cuadrícula
+GRID_SIZE = 10
+MARGIN = 5
+SHIP_SIZES = [5, 4, 3, 3, 2]
+
+# Configurar pantalla y ajustar tamaño de celdas según la pantalla
+SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
+CELL_SIZE = min((SCREEN_WIDTH // 2 - 200) // GRID_SIZE, (SCREEN_HEIGHT - 100) // GRID_SIZE)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
+pygame.display.set_caption("Batalla Naval")
+
+# Fuente para la pantalla de inicio
+font = pygame.font.Font(None, 74)
+small_font = pygame.font.Font(None, 36)
+
+# Funciones de lógica del juego
+def place_ships():
+    board = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
+    for size in SHIP_SIZES:
+        placed = False
+        while not placed:
+            orientation = random.choice(['H', 'V'])
+            if orientation == 'H':
+                row, col = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - size)
+            else:
+                row, col = random.randint(0, GRID_SIZE - size), random.randint(0, GRID_SIZE - 1)
+
+            if all(board[row + (i if orientation == 'V' else 0)][col + (i if orientation == 'H' else 0)] == 0 for i in range(size)):
+                for i in range(size):
+                    board[row + (i if orientation == 'V' else 0)][col + (i if orientation == 'H' else 0)] = 1
+                placed = True
+    return board
+
+def handle_attack(board, x, y):
+    if board[y][x] == 0:
+        board[y][x] = 3  # Fallo
+        return False
+    elif board[y][x] == 1:
+        board[y][x] = 2  # Acierto
+        return True
+    return False
+
+def all_ships_sunk(board):
+    return all(cell != 1 for row in board for cell in row)
+
+# Función para dibujar el tablero
+def draw_grid(board, offset_x, offset_y, reveal_ships=False):
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+            color = WHITE
+            if board[row][col] == 1 and reveal_ships:
+                color = GRAY
+            elif board[row][col] == 2:
+                color = RED
+            elif board[row][col] == 3:
+                color = BLUE
+
+            pygame.draw.rect(screen,
+                             color,
+                             [offset_x + col * (CELL_SIZE + MARGIN),
+                              offset_y + row * (CELL_SIZE + MARGIN),
+                              CELL_SIZE,
+                              CELL_SIZE])
+            pygame.draw.rect(screen, BLACK, [offset_x + col * (CELL_SIZE + MARGIN),
+                                             offset_y + row * (CELL_SIZE + MARGIN),
+                                             CELL_SIZE,
+                                             CELL_SIZE], 1)
+
+# Pantalla de inicio
+def show_start_screen():
+    screen.fill(BLACK)
+    title_text = font.render("Batalla Naval", True, YELLOW)
+    play_text = small_font.render("Presiona Enter para Jugar", True, WHITE)
+
+    screen.blit(title_text, ((SCREEN_WIDTH - title_text.get_width()) // 2, SCREEN_HEIGHT // 3))
+    screen.blit(play_text, ((SCREEN_WIDTH - play_text.get_width()) // 2, SCREEN_HEIGHT // 2))
+
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    waiting = False
+    return True
+
+# Pantalla de selección de dificultad
+def choose_difficulty():
+    screen.fill(BLACK)
+    easy_text = small_font.render("1 - Fácil", True, WHITE)
+    medium_text = small_font.render("2 - Medio", True, WHITE)
+    hard_text = small_font.render("3 - Difícil", True, WHITE)
+
+    screen.blit(easy_text, ((SCREEN_WIDTH - easy_text.get_width()) // 2, SCREEN_HEIGHT // 3))
+    screen.blit(medium_text, ((SCREEN_WIDTH - medium_text.get_width()) // 2, SCREEN_HEIGHT // 2))
+    screen.blit(hard_text, ((SCREEN_WIDTH - hard_text.get_width()) // 2, SCREEN_HEIGHT // 1.5))
+
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    return "easy"
+                elif event.key == pygame.K_2:
+                    return "medium"
+                elif event.key == pygame.K_3:
+                    return "hard"
+
+# Turno de la computadora
+def computer_turn(player_board, difficulty, previous_hits=[]):
+    if difficulty == "hard":
+        # Dificultad "hard": Enfoque en los impactos previos y búsqueda sistemática en las áreas cercanas
+        if previous_hits:
+            # Foco en las áreas cercanas a un barco impactado
+            last_hit = previous_hits[-1]
+            neighbors = [
+                (last_hit[0] + dx, last_hit[1] + dy)
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                if 0 <= last_hit[0] + dx < GRID_SIZE and 0 <= last_hit[1] + dy < GRID_SIZE
+            ]
+            random.shuffle(neighbors)
+            for nx, ny in neighbors:
+                if player_board[ny][nx] in [0, 1]:
+                    if handle_attack(player_board, nx, ny):
+                        previous_hits.append((nx, ny))  # Añadir el acierto a la historia
+                    return True
+        # Si no hay vecinos a los que centrarse, escoger una celda válida al azar
+        while True:
+            x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+            if player_board[y][x] in [0, 1] and (x, y) not in previous_hits:
+                if handle_attack(player_board, x, y):
+                    previous_hits.append((x, y))
+                return True
+    elif difficulty == "medium" and previous_hits:
+        last_hit = previous_hits[-1]
+        neighbors = [
+            (last_hit[0] + dx, last_hit[1] + dy)
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            if 0 <= last_hit[0] + dx < GRID_SIZE and 0 <= last_hit[1] + dy < GRID_SIZE
+        ]
+        random.shuffle(neighbors)
+        for nx, ny in neighbors:
+            if player_board[ny][nx] in [0, 1]:
+                if handle_attack(player_board, nx, ny):
+                    previous_hits.append((nx, ny))
+                else:
+                    previous_hits.pop()
+                return
+    else:
+        while True:
+            x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+            if player_board[y][x] in [0, 1]:
+                if handle_attack(player_board, x, y):
+                    if difficulty == "medium":
+                        previous_hits.append((x, y))
+                return
+
+# Función principal del juego
+def main():
+    if not show_start_screen():
+        return
+    
+    difficulty = choose_difficulty()
+
+    player_board = place_ships()
+    computer_board = place_ships()
+    player_turn = True
+    game_over = False
+    previous_hits = []
+
+    turn_timer = pygame.time.get_ticks()
+
+    running = True
+    while running:
+        screen.fill(BLACK)
+        draw_grid(player_board, 50, 50, reveal_ships=True)
+        draw_grid(computer_board, SCREEN_WIDTH // 2 + 100, 50, reveal_ships=False)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and player_turn and not game_over:
+                mouse_x, mouse_y = event.pos
+                grid_x = (mouse_x - (SCREEN_WIDTH // 2 + 100)) // (CELL_SIZE + MARGIN)
+                grid_y = (mouse_y - 50) // (CELL_SIZE + MARGIN)
+
+                if 0 <= grid_x < GRID_SIZE and 0 <= grid_y < GRID_SIZE:
+                    handle_attack(computer_board, grid_x, grid_y)
+                    player_turn = False
+                    turn_timer = pygame.time.get_ticks()
+
+        if not player_turn and not game_over:
+            if pygame.time.get_ticks() - turn_timer > 1000:  # Retraso de 1 segundo
+                computer_turn(player_board, difficulty, previous_hits)
+                player_turn = True
+
+        if all_ships_sunk(computer_board):
+            game_over = True
+        elif all_ships_sunk(player_board):
+            game_over = True
+
+        pygame.display.flip()
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
