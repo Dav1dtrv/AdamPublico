@@ -108,10 +108,12 @@ def choose_difficulty():
     easy_text = small_font.render("1 - Fácil", True, WHITE)
     medium_text = small_font.render("2 - Medio", True, WHITE)
     hard_text = small_font.render("3 - Difícil", True, WHITE)
+    impossible_text = small_font.render("4 - Imposible", True, WHITE)
 
     screen.blit(easy_text, ((SCREEN_WIDTH - easy_text.get_width()) // 2, SCREEN_HEIGHT // 3))
     screen.blit(medium_text, ((SCREEN_WIDTH - medium_text.get_width()) // 2, SCREEN_HEIGHT // 2))
     screen.blit(hard_text, ((SCREEN_WIDTH - hard_text.get_width()) // 2, SCREEN_HEIGHT // 1.5))
+    screen.blit(impossible_text, ((SCREEN_WIDTH - impossible_text.get_width()) // 2, SCREEN_HEIGHT // 1.2))
 
     pygame.display.flip()
 
@@ -127,55 +129,58 @@ def choose_difficulty():
                     return "medium"
                 elif event.key == pygame.K_3:
                     return "hard"
+                elif event.key == pygame.K_4:
+                    return "impossible"
 
-# Turno de la computadora
 def computer_turn(player_board, difficulty, previous_hits=[]):
-    if difficulty == "hard":
-        # Dificultad "hard": Enfoque en los impactos previos y búsqueda sistemática en las áreas cercanas
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    if difficulty == "impossible":
+        # Dificultad "imposible": Siempre ataca los barcos restantes sistemáticamente
+        for row in range(GRID_SIZE):
+            for col in range(GRID_SIZE):
+                if player_board[row][col] == 1:  # Buscar celdas con barcos
+                    handle_attack(player_board, col, row)
+                    return True
+
+    elif difficulty == "hard":
+        # (Lógica de dificultad "hard" ya incluida en el código previo)
         if previous_hits:
-            # Foco en las áreas cercanas a un barco impactado
             last_hit = previous_hits[-1]
             neighbors = [
                 (last_hit[0] + dx, last_hit[1] + dy)
-                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                for dx, dy in directions
                 if 0 <= last_hit[0] + dx < GRID_SIZE and 0 <= last_hit[1] + dy < GRID_SIZE
             ]
             random.shuffle(neighbors)
             for nx, ny in neighbors:
                 if player_board[ny][nx] in [0, 1]:
                     if handle_attack(player_board, nx, ny):
-                        previous_hits.append((nx, ny))  # Añadir el acierto a la historia
+                        previous_hits.append((nx, ny))  # Añadir el acierto
                     return True
-        # Si no hay vecinos a los que centrarse, escoger una celda válida al azar
+
+        # Selección aleatoria si no hay impactos previos válidos
         while True:
             x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
             if player_board[y][x] in [0, 1] and (x, y) not in previous_hits:
                 if handle_attack(player_board, x, y):
                     previous_hits.append((x, y))
                 return True
-    elif difficulty == "medium" and previous_hits:
-        last_hit = previous_hits[-1]
-        neighbors = [
-            (last_hit[0] + dx, last_hit[1] + dy)
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
-            if 0 <= last_hit[0] + dx < GRID_SIZE and 0 <= last_hit[1] + dy < GRID_SIZE
-        ]
-        random.shuffle(neighbors)
-        for nx, ny in neighbors:
-            if player_board[ny][nx] in [0, 1]:
-                if handle_attack(player_board, nx, ny):
-                    previous_hits.append((nx, ny))
-                else:
-                    previous_hits.pop()
-                return
-    else:
+
+    elif difficulty == "medium":
+        # Lógica para dificultad "medium"
         while True:
             x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
             if player_board[y][x] in [0, 1]:
-                if handle_attack(player_board, x, y):
-                    if difficulty == "medium":
-                        previous_hits.append((x, y))
-                return
+                handle_attack(player_board, x, y)
+                return True
+
+    else:  # Dificultad fácil
+        while True:
+            x, y = random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+            if player_board[y][x] in [0, 1]:
+                handle_attack(player_board, x, y)
+                return True
 
 # Función principal del juego
 def main():
