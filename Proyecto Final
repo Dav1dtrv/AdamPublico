@@ -233,9 +233,10 @@ def main():
 
         if all_ships_sunk(computer_board):
             game_over = True
+            break
         elif all_ships_sunk(player_board):
             game_over = True
-
+            break
         pygame.display.flip()
 
     pygame.quit()
