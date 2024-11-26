@@ -36,19 +36,6 @@ image_width, image_height = CELL_SIZE * 3, CELL_SIZE * 3
 player_image = pygame.transform.scale(player_image, (image_width, image_height))
 computer_image = pygame.transform.scale(computer_image, (image_width, image_height))
 
-# Cargar y escalar imágenes de barcos
-ship_images = {
-    5: pygame.image.load("ship5.jpg"),
-    4: pygame.image.load("ship4.png"),
-    3: pygame.image.load("ship3.jpg"),
-    2: pygame.image.load("ship2.jpg"),
-}
-
-# Escalar imágenes al tamaño adecuado (ajustar CELL_SIZE según la cuadrícula)
-for size in ship_images:
-    ship_images[size] = pygame.transform.scale(ship_images[size], (CELL_SIZE * size, CELL_SIZE))
-
-
 # Funciones de lógica del juego
 def place_ships():
     board = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
@@ -102,47 +89,6 @@ def draw_grid(board, offset_x, offset_y, reveal_ships=False):
                                              CELL_SIZE,
                                              CELL_SIZE], 1)
             
-#Función para contar los barcos restantes
-def count_remaining_ships(board):
-    remaining = {size: 0 for size in SHIP_SIZES}
-    visited = [[False] * GRID_SIZE for _ in range(GRID_SIZE)]
-    
-    for row in range(GRID_SIZE):
-        for col in range(GRID_SIZE):
-            if board[row][col] == 1 and not visited[row][col]:
-                size = 0
-                stack = [(row, col)]
-                while stack:
-                    x, y = stack.pop()
-                    if 0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE and not visited[x][y] and board[x][y] == 1:
-                        visited[x][y] = True
-                        size += 1
-                        stack.extend([(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]])
-                if size in remaining:
-                    remaining[size] += 1
-    return remaining
-
-# Función para dibujar los barcos restantes
-def draw_remaining_ships(player_board, computer_board):
-    player_ships = count_remaining_ships(player_board)
-    computer_ships = count_remaining_ships(computer_board)
-    
-    # Coordenadas base para la sección de barcos restantes
-    player_x, player_y = 50, SCREEN_HEIGHT - 80
-    computer_x, computer_y = SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT - 80
-    
-    # Dibujar barcos del jugador
-    for size, count in player_ships.items():
-        for _ in range(count):
-            screen.blit(ship_images[size], (player_x, player_y))
-            player_x += ship_images[size].get_width() + 10  # Espaciado entre imágenes
-    
-    # Dibujar barcos de la computadora
-    for size, count in computer_ships.items():
-        for _ in range(count):
-            screen.blit(ship_images[size], (computer_x, computer_y))
-            computer_x += ship_images[size].get_width() + 10  # Espaciado entre imágenes
-
 # Pantalla de inicio
 def show_start_screen():
     screen.fill(BLACK)
@@ -275,7 +221,6 @@ def main():
         screen.fill(BLACK)
         draw_grid(player_board, 50, 50, reveal_ships=True)
         draw_grid(computer_board, SCREEN_WIDTH // 2 + 100, 50, reveal_ships=False)
-        draw_remaining_ships(player_board, computer_board)
 
         # Generar imagenes debajo de cada tablero
         screen.blit(player_image, (50, 50 + GRID_SIZE * (CELL_SIZE + MARGIN) + 10))
