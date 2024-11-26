@@ -4,13 +4,14 @@ import random
 # Inicializar Pygame
 pygame.init()
 
-# Definir colores
+# Definir colores   
 WHITE = (255, 255, 255)
 BLUE = (0, 55, 180)
 RED = (230, 0, 0)
 GRAY = (100, 100, 100)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
 
 # Parámetros de la cuadrícula
 GRID_SIZE = 10
@@ -141,6 +142,19 @@ def choose_difficulty():
                 elif event.key == pygame.K_4:
                     return "impossible"
 
+# Función para resaltar los barcos enemigos
+def highlight_enemy_ships(computer_board):
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+            if computer_board[row][col] == 1:  # If it's a ship
+                rect = pygame.Rect(
+                    SCREEN_WIDTH // 2 + 100 + col * (CELL_SIZE + MARGIN),
+                    50 + row * (CELL_SIZE + MARGIN),
+                    CELL_SIZE,
+                    CELL_SIZE
+                )
+                pygame.draw.rect(screen, RED, rect, 3)  # Draw red outline
+                
 def computer_turn(player_board, difficulty, previous_hits=[]):
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -216,13 +230,18 @@ def main():
 
     turn_timer = pygame.time.get_ticks()
 
+    highlight = False  # New flag for toggling highlights
     running = True
     while running:
         screen.fill(BLACK)
         draw_grid(player_board, 50, 50, reveal_ships=True)
         draw_grid(computer_board, SCREEN_WIDTH // 2 + 100, 50, reveal_ships=False)
 
-        # Generar imagenes debajo de cada tablero
+        # Highlight ships if the flag is set
+        if highlight:
+            highlight_enemy_ships(computer_board)
+
+        # Draw images below the grids
         screen.blit(player_image, (50, 50 + GRID_SIZE * (CELL_SIZE + MARGIN) + 10))
         screen.blit(computer_image, (SCREEN_WIDTH // 2 + 480, 50 + GRID_SIZE * (CELL_SIZE + MARGIN) + 10))
 
@@ -238,9 +257,12 @@ def main():
                     handle_attack(computer_board, grid_x, grid_y)
                     player_turn = False
                     turn_timer = pygame.time.get_ticks()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_h:
+                    highlight = not highlight  # Toggle highlighting on/off
 
         if not player_turn and not game_over:
-            if pygame.time.get_ticks() - turn_timer > 1000:  # Retraso de 1 segundo
+            if pygame.time.get_ticks() - turn_timer > 1000:  # Delay of 1 second
                 computer_turn(player_board, difficulty, previous_hits)
                 player_turn = True
                 game_over = all_ships_sunk(computer_board) or all_ships_sunk(player_board)
@@ -259,7 +281,7 @@ def main():
             # Determinar resultado y mostrar mensaje correspondiente
             screen.fill(BLACK)  # Limpiar la pantalla
             if all_ships_sunk(computer_board):
-                result_text = font.render("¡Ganaste!", True, YELLOW)
+                result_text = font.render("¡Ganaste!", True, GREEN)
             else:
                 result_text = font.render("¡Perdiste!", True, RED)
             screen.blit(result_text, ((SCREEN_WIDTH - result_text.get_width()) // 2, SCREEN_HEIGHT // 2))
