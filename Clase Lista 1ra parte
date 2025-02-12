@@ -1,0 +1,112 @@
+
+// Online C++ Compiler - Build, Compile and Run your C++ programs online in your favorite browser
+
+#include<iostream>
+
+using namespace std;
+
+class Nodo{
+    int dato;
+    Nodo* next;
+    
+public:
+
+    Nodo(){
+        dato = 0;
+        next = nullptr;
+    }
+    
+    Nodo(int d){
+        dato = d;
+        next = nullptr;
+    }
+    
+    int getDato(){
+        return dato;
+    }
+    
+    void setDato(int d){
+        dato = d;
+    }
+    
+    Nodo* getNext(){
+        return next;
+    }
+    
+    void setNext(Nodo* n){
+        next = n;
+    }
+    
+    string to_string(){
+        return std::to_string(dato);
+    }
+    
+};
+
+class Lista{
+    Nodo* ptr;
+    
+public:
+
+    Lista(){
+        ptr = nullptr;
+    }
+    
+    void add(int d){
+        Nodo* n = new Nodo(d);
+        if(ptr == nullptr){
+        ptr = n;
+        }else{
+            Nodo* temp = ptr;
+            while(temp->getNext() != nullptr){
+                temp = temp->getNext();
+            }
+            temp->setNext(n);
+        }
+    }
+    
+    void print(){
+        Nodo* temp = ptr;
+            while(temp != nullptr){
+                cout<<temp->getDato()<<"\t";
+                temp = temp->getNext();
+            }
+    }
+    
+/*get iésimo elemento
+    int get(int d){
+        
+        return i;
+    }*/
+    
+//find elemento d
+    
+    
+};
+
+int main()
+{
+    srand(time(0));
+    Nodo n;                         //Se crea el Nodo n    
+    n.setDato(5);                   //Se le asigna el valor 5
+    cout<<n.getNext()<<endl;        
+    cout<<n.to_string()<<endl;
+    
+    
+    Nodo n2(6);                     //Nodo n2 con valor 6
+    cout<<&n2<<" "<<endl;           //& para la ubicación de n2
+    n.setNext(&n2);                 //El next de n es la ubicación de n2
+    cout<<n.getNext()->to_string()<<endl;   //getNext es una ubicación, lo que hace la flechita es devoler lo que HAY en esa ubicación, lo convierte en string y lo imprime
+    
+    n2.setNext(new Nodo(7));
+    cout<<n2.getNext()->to_string()<<endl;
+
+    Lista l;
+    for(int i=0; i<10; i++){
+        l.add(rand()%100);
+    }
+    
+    l.print();
+    
+    return 0;
+}
