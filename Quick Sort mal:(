@@ -1,0 +1,65 @@
+
+// Online C++ Compiler - Build, Compile and Run your C++ programs online in your favorite browser
+
+#include<iostream>
+
+using namespace std;
+
+void print(int v[],int size){
+    for(int i= 0; i<size; i++){
+        cout<<v[i]<<"\t";
+    }cout<<endl;
+}
+
+int particion(int v[], int size, int ini, int fini){
+    int pivote = (ini+fini)/2;
+    cout<<"índice: "<<pivote<<", dato: "<<v[pivote]<<endl;
+    int temp = 0;
+    while(ini != fini){
+        if(v[pivote]>v[fini]){
+            temp = v[fini];
+            v[fini] = v[ini];
+            v[ini] = temp;
+            ini++;
+        }
+        else{
+            fini--;
+        }
+        print(v, size);
+    }
+    temp = v[ini];
+    v[ini] = v[pivote];
+    v[pivote] = temp;
+    
+    return ini;
+}
+
+void quick_sort(int v[], int size, int ini, int fini){
+    if (ini<fini){
+       int p = particion (v, size, ini, fini);
+       particion(v,size,0,p-1);
+       particion(v,size,p+1, fini);
+    }
+}
+
+
+int main()
+{
+    srand(2025);
+    
+    int size = 10;
+    int v[size];
+    
+    for(int i= 0; i<size; i++){
+        v[i] = rand()%100;
+    }
+    v[4] = 8;
+    
+    print(v, size);
+    
+    quick_sort(v, size, 0, size-1);
+    
+    print(v, size);
+    
+    return 0;
+}
