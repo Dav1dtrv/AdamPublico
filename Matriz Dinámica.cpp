@@ -1,5 +1,3 @@
-// Online C++ Compiler - Build, Compile and Run your C++ programs online in your favorite browser
-
 #include<iostream>
 
 using namespace std;
@@ -30,14 +28,12 @@ class Matriz{
     int** m;    //Se crea el apuntador de apuntadores m
     int fil;    //Atributo para filas
     int col;    //Atributo para columnas
-    int size;   //Atributo para la cantidad de elementos dentro de la matriz
 
 public:
 //Crear matriz default como fue explicado al inicio del código
     Matriz(){
         fil = 5;
         col = 5;
-        size = 0;
         m = new int*[fil];
         for(int i=0; i<fil; i++){
             m[i] = new int[col];
@@ -51,7 +47,6 @@ public:
     Matriz(int f,int c){
         fil = f;
         col = c;
-        size = 0;
         m = new int*[fil];
         for(int i=0; i<fil; i++){
             m[i] = new int[col];
@@ -140,17 +135,18 @@ public:
     }
 
 //Add
-    void add(int d){
-        
-        if (size == fil * col) {
-        addFil();
-        } //Revisar que haya espacio
-        
-        int f = size/fil; //División entera para hayar la fila
-        int c = size % col; //Módulo para hayar la columna
-        m[f][c] = d; //Añadir d
-        
-        size++; //Aumentar el size
+    void add(int d) {
+    for (int i = 0; i < fil; i++) {
+        for (int j = 0; j < col; j++) {
+            if (m[i][j] == 0) {
+                m[i][j] = d;
+                return;
+            }
+        }
+    }
+    
+    addFil();
+    add(d);
     }
     
     int getCol(){
@@ -161,32 +157,4 @@ public:
         return fil;
     }
     
-    int getSize(){
-        return size;
-    }
-    
-    int getCapacity(){
-        return capacity;
-    }
-    
 };
-
-int main()
-{
-    srand(1234);
-    
-    Matriz m(3,3);
-    
-    for(int i=0; i<7; i++){
-        m.add(rand()%100);
-    }
-    
-    m.print();
-    
-    m.addFil();
-    m.print();
-    
-
-    
-    return 0;
-}
